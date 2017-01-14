@@ -114,8 +114,6 @@ describe('GET /todos/:id', () => {
 
 });
 
-
-
 describe('DELETE /todos/:id', () => {
     it('should DELETE todo from database', (done) => {
         let hexid = todos[1]._id.toHexString();
