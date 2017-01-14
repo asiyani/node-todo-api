@@ -7,10 +7,13 @@ const { Todo } = require('./../models/todo');
 
 let todos = [{
     _id: new ObjectID(),
-    text: "1st todos"
+    text: "1st todos",
+    completed:true,
+    completedAt:new Date()
 }, {
     _id: new ObjectID(),
-    text: "2nd todos"
+    text: "2nd todos",
+    completed:false
 }];
 
 beforeEach((done) => {
@@ -146,4 +149,50 @@ describe('DELETE /todos/:id', () => {
                         .expect(404)
                         .end(done);
     });
+});
+
+
+describe('PATCH /todos/:id', () => {
+
+    it("Should complete= true and update text ", (done) => {
+        superTest(app).patch(`/todos/${todos[1]._id.toHexString()}`)
+                        .send({text:"New TEST TEXT",completed:true})
+                            .expect(200)
+                            .expect( (res) => {
+                                expect(res.body.todo.text).toBe("New TEST TEXT");
+                                expect(res.body.todo.completedAt).toBeTruthy();
+                            })
+                            .end( (err,result) => {
+                                if(err){
+                                    return done(err);
+                                }
+                                Todo.findById(todos[1]._id.toHexString()).then((todo) => {
+                                            expect(todo.text).toBe('New TEST TEXT');
+                                            expect(todo.completedAt).toBeTruthy();
+                                            done();
+                                        })
+                                        .catch(e => done(e));
+                                                });
+    });
+
+    it("Should complete= false  ", (done) => {
+        superTest(app).patch(`/todos/${todos[0]._id.toHexString()}`, ( err, res ) =>{
+                                    res.send({completed:false});
+                                })
+                            .expect(200)
+                            .expect( (res) => {
+                                expect(res.body.todo.completedAt).toBeFalsy();
+                            })
+                            .end( (err,result) => {
+                                if(err){
+                                    return done(err);
+                                }
+                                Todo.findById(todos[0]._id.toHexString()).then((todo) => {
+                                            expect(todo.completedAt).toBeFalsy();
+                                            done();
+                                        })
+                                        .catch(e => done(e));
+                                                });
+    });
+
 });
