@@ -67,7 +67,29 @@ UserSchema.statics.findByToken = function (token) {
         'tokens.token':token,
         'tokens.access':'auth'
     });
-}
+};
+
+UserSchema.statics.findByCredential  = function(Orinuser) {
+    var User = this;
+    return User.findOne({email:Orinuser.email}).then( (user) => {
+        if(!user)
+            return Promise.reject();
+        return new Promise( (resolve,reject) => {
+                bcrypt.compare(Orinuser.password, user.password, (err, result) => {
+                console.log(err,result);
+                if(err)
+                return   reject();
+                if(result){
+                    console.log(result);
+                    resolve(user);
+                }else{
+                    reject();
+                }
+            })
+        })
+        
+    })
+};
 
 UserSchema.pre('save', function (next) {
     var user = this;
