@@ -19,46 +19,46 @@ app.use(bodyParser.json());
 
 
 
-app.post('/todos', (req,res) => {
-    console.log(req.body);
-    let newTodo = new Todo(req.body);
+app.post('/todos', authenticate,  (req,res) => {
+    
+    let newTodo = new Todo({
+        text:req.body.text,
+        _creator:req.user._id
+    });
     newTodo.save().then( (result)=> res.send(result) )
                   .catch( (err) => res.status(400).send(err));
 
 });
 
-app.get('/todos', (req,res) => {
+app.get('/todos', authenticate,  (req,res) => {
     
-    Todo.find().then( (todos) => res.send({todos}))
+    Todo.find({ _creator:req.user._id }).then( (todos) => res.send({todos}))
                .catch( err => res.status(400).send(e));
 });
 
-app.get('/todos/:id' , (req,res) => {
+app.get('/todos/:id', authenticate , (req,res) => {
     let id = req.params.id;
 
     if(!ObjectID.isValid(id)){
         return res.status(404).send(); 
     }
 
-    Todo.findById(id).then( (result) => {
+    Todo.findOne({_id:id,_creator:req.user._id}).then( (result) => {
                     if(!result)
                         return res.status(404).send();
                     res.send({todo:result});
                 })
                 .catch( (err) => res.status(400).send(err));
-
-
-
 });
 
 
-app.delete('/todos/:id' , (req,res) => {
+app.delete('/todos/:id', authenticate , (req,res) => {
     let id = req.params.id;
     if(!ObjectID.isValid(id)){
         return res.status(404).send(); 
     }
 
-    Todo.findOneAndRemove({_id:id}).then( (result) => {
+    Todo.findOneAndRemove({_id:id,_creator:req.user._id}).then( (result) => {
                     if(!result)
                         return res.status(404).send();
                     res.send({todo:result});  
@@ -66,7 +66,7 @@ app.delete('/todos/:id' , (req,res) => {
                 .catch( (err) => res.status(400).send(err));
 });
 
-app.patch('/todos/:id' , (req,res) => {
+app.patch('/todos/:id', authenticate,  (req,res) => {
     let id = req.params.id;
     let body = _.pick(req.body, ['text','completed']);
 
@@ -81,7 +81,7 @@ app.patch('/todos/:id' , (req,res) => {
         body.completedAt = null;
     }
 
-    Todo.findOneAndUpdate({_id:id},{$set:body},{new:true}).then( (result) => {
+    Todo.findOneAndUpdate({_id:id, _creator:req.user._id},{$set:body},{new:true}).then( (result) => {
                     if(!result)
                         return res.status(404).send();
                     res.send({todo:result})
@@ -115,8 +115,6 @@ app.post('/users/login',( req,res) => {
                             .catch( err => res.status(400).send());
 });
 
-
-
 app.get('/users/me', authenticate,  (req,res) => {
     res.send({user:req.user});
 });
@@ -126,7 +124,6 @@ app.delete('/users/me/token', authenticate,  (req,res) => {
     req.user.removeToken(req.token).then( ()=> res.send())
                                  .catch( e => res.status(400).send());
 });
-
 
 
 app.listen(port, () => console.log('Started on port '+port));

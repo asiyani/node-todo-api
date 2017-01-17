@@ -18,7 +18,11 @@ let users = [{
 },{
     _id:usertwoID,
     email:'user2@example.com',
-    password:'user2pass'
+    password:'user2pass',
+    tokens:[{
+        access:'auth',
+        token:jwt.sign({_id: usertwoID.toHexString(), access:'auth'}, 'abc123').toString()
+    }]
 }];
 
 
@@ -26,11 +30,13 @@ let todos = [{
     _id: new ObjectID(),
     text: "1st todos",
     completed:true,
+    _creator:userOneID,
     completedAt:new Date()
 }, {
     _id: new ObjectID(),
     text: "2nd todos",
-    completed:false
+    completed:false,
+    _creator:usertwoID
 }];
 
 var populateTodos = (done) => {
