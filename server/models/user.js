@@ -46,11 +46,17 @@ UserSchema.methods.generateAuthToken = function () {
   var access = 'auth';
   var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString();
   user.tokens.push({access, token});
-
   return user.save().then(() => {
     return token;
-  });
+  }).catch( e => console.log(e));;
 };
+
+UserSchema.methods.removeToken = function (token) {
+        var user = this;
+        return user.update({ $pull:{
+            tokens:{token}
+        }})
+}
 
 UserSchema.statics.findByToken = function (token) {
     var User = this;
@@ -78,9 +84,8 @@ UserSchema.statics.findByCredential  = function(Orinuser) {
                 bcrypt.compare(Orinuser.password, user.password, (err, result) => {
                 console.log(err,result);
                 if(err)
-                return   reject();
+                    return   reject();
                 if(result){
-                    console.log(result);
                     resolve(user);
                 }else{
                     reject();
